@@ -321,100 +321,18 @@
             { text: "Your life is your message to the world; make it count", author: "Anonymous" }
         ];
 
-        // Optimized quote generation with error handling
-        function generateQuote() {
-            try {
-                // Initialize cache only if needed
-                if (quoteCache.length === 0) {
-                    quoteCache = [...quotes];
-                    currentQuoteIndex = -1;
-                }
-
-                // Get next quote
-                currentQuoteIndex = (currentQuoteIndex + 1) % quoteCache.length;
-                let quote = quoteCache[currentQuoteIndex];
-
-                // Update the display with smooth transition
-                const targetQuote = isFlipped ? quoteElement : quoteBackElement;
-                const targetAuthor = isFlipped ? authorElement : authorBackElement;
-
-                // Prevent duplicate consecutive quotes
-                if (targetQuote.textContent === quote.text) {
-                    currentQuoteIndex = (currentQuoteIndex + 1) % quoteCache.length;
-                    quote = quoteCache[currentQuoteIndex];
-                }
-
-                // Update content without animation first
-                targetQuote.textContent = quote.text;
-                targetAuthor.textContent = `- ${quote.author}`;
-
-                // Use requestAnimationFrame for smooth animation
-                requestAnimationFrame(() => {
-                    quoteContainer.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                    quoteContainer.classList.toggle('flip');
-                    isFlipped = !isFlipped;
-                });
-
-                // Reset timer with improved accuracy
-                timeLeft = 10;
-                lastUpdateTime = Date.now();
-
-                // Ensure auto-generation is running if not paused
-                if (!intervalId && !isPaused) {
-                    startAutoGeneration();
-                }
-            } catch (error) {
-                console.error('Error generating quote:', error);
-                // Simple recovery without shuffling
-                quoteCache = [...quotes];
-                currentQuoteIndex = -1;
-            }
-        }
-
-        // Improved timer update function using requestAnimationFrame
-        function updateTimer() {
-            if (isPaused) return;
-            
-            const currentTime = Date.now();
-            const timeDiff = (currentTime - lastUpdateTime) / 1000;
-            
-            timeLeft = Math.max(0, Math.ceil(10 - timeDiff));
-            const timerText = `Next quote in ${timeLeft}s`;
-            timerElement.textContent = timerText;
-            timerBackElement.textContent = timerText;
-            
-            if (timeLeft <= 0) {
-                generateQuote();
-            }
-
-            // Request next frame for smooth updates
-            if (!isPaused) {
-                intervalId = requestAnimationFrame(updateTimer);
-            }
-        }
-
-        function startAutoGeneration() {
-            stopAutoGeneration(); // Clear any existing interval
-            lastUpdateTime = Date.now();
-            intervalId = requestAnimationFrame(updateTimer);
-        }
-
-        function stopAutoGeneration() {
-            if (intervalId) {
-                cancelAnimationFrame(intervalId);
-                intervalId = null;
-            }
-        }
-
         // Event Listeners with improved handling
         enterBtn.addEventListener('click', () => {
             intro.classList.add('hidden');
             main.classList.add('active');
             createParticles();
-            shuffleQuotes(); // Initialize quote cache
+            quoteCache = [...quotes];
+            currentQuoteIndex = -1;
             timeLeft = 10;
             timerElement.textContent = `Next quote in ${timeLeft}s`;
             timerBackElement.textContent = `Next quote in ${timeLeft}s`;
+            // Generate first quote immediately
+            generateQuote();
         });
 
         // Improved touch handling for mobile
@@ -422,16 +340,17 @@
         let isTouchActive = false;
 
         generateBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent default to avoid any delay
             touchStartTime = Date.now();
             isTouchActive = true;
-        }, { passive: true });
+            // Generate quote immediately on touch start
+            generateQuote();
+        }, { passive: false });
 
         generateBtn.addEventListener('touchend', (e) => {
-            if (isTouchActive && Date.now() - touchStartTime < 300) {
-                generateQuote();
-            }
+            e.preventDefault();
             isTouchActive = false;
-        }, { passive: true });
+        }, { passive: false });
 
         generateBtn.addEventListener('touchcancel', () => {
             isTouchActive = false;
@@ -524,6 +443,91 @@
         });
 
         window.addEventListener('resize', optimizeForMobile);
+
+        // Optimized quote generation with error handling
+        function generateQuote() {
+            try {
+                // Initialize cache only if needed
+                if (quoteCache.length === 0) {
+                    quoteCache = [...quotes];
+                    currentQuoteIndex = -1;
+                }
+
+                // Get next quote
+                currentQuoteIndex = (currentQuoteIndex + 1) % quoteCache.length;
+                let quote = quoteCache[currentQuoteIndex];
+
+                // Update the display with smooth transition
+                const targetQuote = isFlipped ? quoteElement : quoteBackElement;
+                const targetAuthor = isFlipped ? authorElement : authorBackElement;
+
+                // Prevent duplicate consecutive quotes
+                if (targetQuote.textContent === quote.text) {
+                    currentQuoteIndex = (currentQuoteIndex + 1) % quoteCache.length;
+                    quote = quoteCache[currentQuoteIndex];
+                }
+
+                // Update content without animation first
+                targetQuote.textContent = quote.text;
+                targetAuthor.textContent = `- ${quote.author}`;
+
+                // Use requestAnimationFrame for smooth animation
+                requestAnimationFrame(() => {
+                    quoteContainer.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    quoteContainer.classList.toggle('flip');
+                    isFlipped = !isFlipped;
+                });
+
+                // Reset timer with improved accuracy
+                timeLeft = 10;
+                lastUpdateTime = Date.now();
+
+                // Ensure auto-generation is running if not paused
+                if (!intervalId && !isPaused) {
+                    startAutoGeneration();
+                }
+            } catch (error) {
+                console.error('Error generating quote:', error);
+                // Simple recovery without shuffling
+                quoteCache = [...quotes];
+                currentQuoteIndex = -1;
+            }
+        }
+
+        function startAutoGeneration() {
+            stopAutoGeneration(); // Clear any existing interval
+            lastUpdateTime = Date.now();
+            intervalId = requestAnimationFrame(updateTimer);
+        }
+
+        function stopAutoGeneration() {
+            if (intervalId) {
+                cancelAnimationFrame(intervalId);
+                intervalId = null;
+            }
+        }
+
+        // Improved timer update function using requestAnimationFrame
+        function updateTimer() {
+            if (isPaused) return;
+            
+            const currentTime = Date.now();
+            const timeDiff = (currentTime - lastUpdateTime) / 1000;
+            
+            timeLeft = Math.max(0, Math.ceil(10 - timeDiff));
+            const timerText = `Next quote in ${timeLeft}s`;
+            timerElement.textContent = timerText;
+            timerBackElement.textContent = timerText;
+            
+            if (timeLeft <= 0) {
+                generateQuote();
+            }
+
+            // Request next frame for smooth updates
+            if (!isPaused) {
+                intervalId = requestAnimationFrame(updateTimer);
+            }
+        }
     </script>
 </body>
 </html>
