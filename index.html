@@ -12,7 +12,6 @@
             font-family: 'Arial', sans-serif;
         }
 
-        /* Intro Page Styles */
         .intro {
             height: 100vh;
             background: linear-gradient(45deg, #1a1a1a, #2d0047);
@@ -31,8 +30,17 @@
         .intro h1 {
             color: white;
             font-size: clamp(2rem, 5vw, 3rem);
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .intro p {
+            color: #ddd;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            margin-bottom: 2rem;
+            text-align: center;
+            max-width: 600px;
+            padding: 0 1rem;
         }
 
         .tap-btn {
@@ -58,7 +66,6 @@
             100% { transform: scale(1); }
         }
 
-        /* Main Page Styles */
         .main {
             min-height: 100vh;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -132,23 +139,21 @@
     </style>
 </head>
 <body>
-    <!-- Intro Page -->
     <div class="intro">
         <h1>Welcome to RDQ</h1>
-        <button class="tap-btn" id="enterBtn">Tap to Enter</button>
+        <p>Yo, get ready for a non-stop flood of fresh quotes!</p>
+        <button class="tap-btn" id="enterBtn">Tap to Unleash</button>
     </div>
 
-    <!-- Main Page -->
     <div class="main">
         <div class="quote-container">
-            <div class="quote" id="quote">Click to begin your journey</div>
-            <div class="author" id="author">- The Universe</div>
+            <div class="quote" id="quote">Click to drop the first bomb of truth</div>
+            <div class="author" id="author">- The Void</div>
             <button class="generate-btn" id="generateBtn">Generate Quote</button>
         </div>
     </div>
 
     <script>
-        // Elements
         const intro = document.querySelector('.intro');
         const main = document.querySelector('.main');
         const enterBtn = document.getElementById('enterBtn');
@@ -157,7 +162,16 @@
         const authorElement = document.getElementById('author');
 
         let intervalId = null;
-        let lastQuote = null;
+        const usedQuotes = new Set(); // Tracks every damn quote we’ve seen
+
+        // Local fallback quotes in case API shits the bed
+        const fallbackQuotes = [
+            { text: "Life’s a grind, keep swinging.", author: "The Hustle" },
+            { text: "Truth hits harder than lies.", author: "Reality" },
+            { text: "Keep it real, or keep it moving.", author: "The Streets" },
+            { text: "No repeats, just heat.", author: "The Code" }
+        ];
+        let fallbackIndex = 0;
 
         // Transition to main page
         enterBtn.addEventListener('click', () => {
@@ -168,32 +182,35 @@
             }, 500);
         });
 
-        // Fetch random quote from Quotable API
+        // Fetch a fresh-ass quote
         async function fetchRandomQuote() {
             try {
                 const response = await fetch('https://api.quotable.io/random');
                 const data = await response.json();
-                
-                // Prevent same quote twice in a row
-                if (lastQuote && data.content === lastQuote.content) {
-                    return fetchRandomQuote(); // Recursively fetch another if duplicate
+                const quoteKey = `${data.content.toLowerCase().trim()}-${data.author?.toLowerCase().trim() || 'unknown'}`;
+
+                // If it’s a repeat, keep fetching, no mercy
+                if (usedQuotes.has(quoteKey)) {
+                    console.log(`Duplicate detected: "${data.content}" by ${data.author}. Fetching again.`);
+                    return await fetchRandomQuote(); // Recurse until we get a new one
                 }
-                
-                lastQuote = data;
+
+                usedQuotes.add(quoteKey);
+                console.log(`New quote added: "${data.content}" by ${data.author}`);
                 return {
                     text: data.content,
                     author: data.author || 'Unknown'
                 };
             } catch (error) {
-                console.error('Error fetching quote:', error);
-                return {
-                    text: "The universe is full of surprises.",
-                    author: "Unknown"
-                };
+                console.error('API fucked up:', error);
+                // Use fallback if API fails
+                const fallback = fallbackQuotes[fallbackIndex % fallbackQuotes.length];
+                fallbackIndex++;
+                return fallback;
             }
         }
 
-        // Generate and display new quote
+        // Slam that new quote on the screen
         async function generateQuote() {
             const quoteData = await fetchRandomQuote();
             
@@ -208,13 +225,12 @@
             }, 500);
         }
 
-        // Start auto-generation
+        // Auto-generate like a machine gun
         function startAutoGeneration() {
             if (intervalId) clearInterval(intervalId);
             intervalId = setInterval(generateQuote, 10000); // Every 10 seconds
         }
 
-        // Stop auto-generation
         function stopAutoGeneration() {
             if (intervalId) {
                 clearInterval(intervalId);
@@ -222,17 +238,17 @@
             }
         }
 
-        // Button click handler
+        // Button smash handler
         generateBtn.addEventListener('click', () => {
             stopAutoGeneration();
             generateQuote();
             startAutoGeneration();
         });
 
-        // Start auto-generation when entering main page
+        // Kick it off when main page loads
         main.addEventListener('transitionend', () => {
             if (main.classList.contains('active')) {
-                generateQuote(); // Initial quote
+                generateQuote();
                 startAutoGeneration();
             }
         }, { once: true });
