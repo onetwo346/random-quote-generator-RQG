@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDQ - Random Quote Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Intro Page Styles */
+        .intro {
+            height: 100vh;
+            background: linear-gradient(45deg, #1a1a1a, #2d0047);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .intro.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro h1 {
+            color: white;
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .tap-btn {
+            padding: 1.5rem 3rem;
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(45deg, #ff00cc, #3333ff);
+            color: white;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 20px rgba(255, 0, 204, 0.5);
+            transition: transform 0.2s ease;
+        }
+
+        .tap-btn:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Main Page Styles */
+        .main {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .main.active {
+            display: flex;
+        }
+
+        .quote-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 2rem;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+            transform: perspective(1000px) rotateX(5deg);
+            transition: transform 0.3s ease, opacity 0.5s ease;
+        }
+
+        .quote-container:hover {
+            transform: perspective(1000px) rotateX(0deg);
+        }
+
+        .quote {
+            color: white;
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            margin-bottom: 1rem;
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .author {
+            color: #ddd;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            text-align: right;
+            transition: opacity 0.5s ease;
+        }
+
+        .generate-btn {
+            padding: 1rem 2rem;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(45deg, #00ffcc, #00ff99);
+            color: #1a1a1a;
+            cursor: pointer;
+            margin-top: 2rem;
+            transition: transform 0.2s ease, opacity 0.3s ease;
+        }
+
+        .generate-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .fade-out {
+            opacity: 0;
+        }
+
+        @media (max-width: 768px) {
+            .quote-container { padding: 2rem; }
+            .tap-btn { padding: 1rem 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Intro Page -->
+    <div class="intro">
+        <h1>Welcome to RDQ</h1>
+        <button class="tap-btn" id="enterBtn">Tap to Enter</button>
+    </div>
+
+    <!-- Main Page -->
+    <div class="main">
+        <div class="quote-container">
+            <div class="quote" id="quote">Click to begin your journey</div>
+            <div class="author" id="author">- The Universe</div>
+            <button class="generate-btn" id="generateBtn">Generate Quote</button>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const intro = document.querySelector('.intro');
+        const main = document.querySelector('.main');
+        const enterBtn = document.getElementById('enterBtn');
+        const generateBtn = document.getElementById('generateBtn');
+        const quoteElement = document.getElementById('quote');
+        const authorElement = document.getElementById('author');
+
+        let intervalId = null;
+        let lastQuote = null;
+
+        // Transition to main page
+        enterBtn.addEventListener('click', () => {
+            intro.classList.add('hidden');
+            setTimeout(() => {
+                intro.style.display = 'none';
+                main.classList.add('active');
+            }, 500);
+        });
+
+        // Fetch random quote from Quotable API
+        async function fetchRandomQuote() {
+            try {
+                const response = await fetch('https://api.quotable.io/random');
+                const data = await response.json();
+                
+                // Prevent same quote twice in a row
+                if (lastQuote && data.content === lastQuote.content) {
+                    return fetchRandomQuote(); // Recursively fetch another if duplicate
+                }
+                
+                lastQuote = data;
+                return {
+                    text: data.content,
+                    author: data.author || 'Unknown'
+                };
+            } catch (error) {
+                console.error('Error fetching quote:', error);
+                return {
+                    text: "The universe is full of surprises.",
+                    author: "Unknown"
+                };
+            }
+        }
+
+        // Generate and display new quote
+        async function generateQuote() {
+            const quoteData = await fetchRandomQuote();
+            
+            quoteElement.classList.add('fade-out');
+            authorElement.classList.add('fade-out');
+
+            setTimeout(() => {
+                quoteElement.textContent = quoteData.text;
+                authorElement.textContent = `- ${quoteData.author}`;
+                quoteElement.classList.remove('fade-out');
+                authorElement.classList.remove('fade-out');
+            }, 500);
+        }
+
+        // Start auto-generation
+        function startAutoGeneration() {
+            if (intervalId) clearInterval(intervalId);
+            intervalId = setInterval(generateQuote, 10000); // Every 10 seconds
+        }
+
+        // Stop auto-generation
+        function stopAutoGeneration() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        // Button click handler
+        generateBtn.addEventListener('click', () => {
+            stopAutoGeneration();
+            generateQuote();
+            startAutoGeneration();
+        });
+
+        // Start auto-generation when entering main page
+        main.addEventListener('transitionend', () => {
+            if (main.classList.contains('active')) {
+                generateQuote(); // Initial quote
+                startAutoGeneration();
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>
