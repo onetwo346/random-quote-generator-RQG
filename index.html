@@ -24,7 +24,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s;
             position: absolute;
             width: 100%;
             z-index: 1000;
@@ -33,6 +33,7 @@
         .intro.hidden {
             transform: translateY(-100%);
             opacity: 0;
+            pointer-events: none;
         }
 
         .intro h1 {
@@ -61,7 +62,8 @@
             cursor: pointer;
             animation: pulse 2s infinite;
             box-shadow: 0 0 20px rgba(255, 0, 204, 0.5);
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            touch-action: manipulation;
         }
 
         .tap-btn:hover {
@@ -79,7 +81,6 @@
             justify-content: center;
             padding: 2rem;
             transition: opacity 0.8s ease;
-            perspective: 1000px;
         }
 
         .main.active {
@@ -100,6 +101,7 @@
             height: 100%;
             transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
         }
 
         .quote-face {
@@ -109,16 +111,12 @@
             backface-visibility: hidden;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 3rem;
-            box-shadow: 
-                0 0 30px rgba(255, 255, 255, 0.1),
-                inset 0 0 20px rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
             justify-content: center;
-            transform-style: preserve-3d;
         }
 
         .quote-face.back {
@@ -127,10 +125,6 @@
 
         .quote-container.flip {
             transform: rotateX(180deg);
-        }
-
-        .quote-container.paused {
-            animation-play-state: paused;
         }
 
         .quote {
@@ -177,12 +171,12 @@
             border: none;
             border-radius: 30px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            transform-style: preserve-3d;
             transform: translateZ(20px);
+            touch-action: manipulation;
         }
 
         .generate-btn {
@@ -243,6 +237,7 @@
             border-radius: 50%;
             pointer-events: none;
             opacity: 0;
+            will-change: transform, opacity;
         }
 
         @keyframes float {
@@ -291,6 +286,7 @@
     </div>
 
     <script>
+        // DOM Elements
         const intro = document.querySelector('.intro');
         const main = document.querySelector('.main');
         const enterBtn = document.getElementById('enterBtn');
@@ -305,229 +301,168 @@
         const timerBackElement = document.getElementById('timerBack');
         const particles = document.getElementById('particles');
 
-        let intervalId = null;
+        // State
         let isPaused = false;
         let timeLeft = 10;
         let lastUpdateTime = Date.now();
         let isFlipped = false;
-        let quoteCache = [];
-        let currentQuoteIndex = -1;
+        let isGenerating = false;
+        let animationFrameId = null;
+        const usedQuotes = new Set();
 
-        // Our complete collection of inspiring quotes
+        // Quotes Collection (deduplicated and optimized)
         const quotes = [
             { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
             { text: "Innovation is not just a product; it's the process of turning what if into what's next.", author: "Kofi Fosu" },
             { text: "In code, like in life, simplicity is the hidden beauty beneath complexity.", author: "Cosmos Coderr" },
-            { text: "Your life is your message to the world; make it count", author: "Anonymous" }
+            { text: "A quiet mind is the best canvas for creating the loudest ideas.", author: "Anonymous" },
+            { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+            { text: "Every mistake is a lesson waiting to be written into the code of your future.", author: "Kofi Fosu" },
+            // Add more quotes as needed, ensuring no duplicates
+            { text: "The best way to predict the future is to create it.", author: "Anonymous" },
+            { text: "Life is about progress, not perfection.", author: "Anonymous" }
         ];
 
-        // Event Listeners with improved handling
-        enterBtn.addEventListener('click', () => {
-            intro.classList.add('hidden');
-            main.classList.add('active');
-            createParticles();
-            quoteCache = [...quotes];
-            currentQuoteIndex = -1;
-            timeLeft = 10;
-            timerElement.textContent = `Next quote in ${timeLeft}s`;
-            timerBackElement.textContent = `Next quote in ${timeLeft}s`;
-            // Generate first quote immediately
-            generateQuote();
-        });
-
-        // Improved touch handling for mobile
-        let touchStartTime = 0;
-        let isTouchActive = false;
-
-        generateBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent default to avoid any delay
-            touchStartTime = Date.now();
-            isTouchActive = true;
-            // Generate quote immediately on touch start
-            generateQuote();
-        }, { passive: false });
-
-        generateBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            isTouchActive = false;
-        }, { passive: false });
-
-        generateBtn.addEventListener('touchcancel', () => {
-            isTouchActive = false;
-        }, { passive: true });
-
-        generateBtn.addEventListener('click', (e) => {
-            if (e.pointerType === 'touch') return;
-            generateQuote();
-        });
-
-        pauseBtn.addEventListener('click', () => {
-            isPaused = !isPaused;
-            pauseBtn.querySelector('span').textContent = isPaused ? 'Resume Auto' : 'Pause Auto';
-            
-            if (isPaused) {
-                stopAutoGeneration();
-            } else {
-                startAutoGeneration();
-            }
-        });
-
-        // Improved visibility handling
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                stopAutoGeneration();
-                document.body.style.animationPlayState = 'paused';
-            } else if (!isPaused) {
-                lastUpdateTime = Date.now();
-                startAutoGeneration();
-                document.body.style.animationPlayState = 'running';
-            }
-        });
-
-        // Optimized particle creation using DocumentFragment
+        // Particle Animation
         function createParticles() {
-            const fragment = document.createDocumentFragment();
-            const particleCount = window.innerWidth < 768 ? 25 : 50; // Reduce particles on mobile
-            
+            const particleCount = Math.min(50, Math.floor(window.innerWidth / 20)); // Scale particles based on screen size
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
-                particle.style.width = Math.random() * 3 + 'px'; // Smaller particles on mobile
-                particle.style.height = particle.style.width;
-                fragment.appendChild(particle);
+                const size = Math.random() * 4 + 1;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particles.appendChild(particle);
                 animateParticle(particle);
             }
-            particles.appendChild(fragment);
         }
 
         function animateParticle(particle) {
-            particle.style.left = Math.random() * 100 + 'vw';
-            const duration = Math.random() * 5 + 3; // Shorter animation on mobile
+            particle.style.left = `${Math.random() * 100}vw`;
+            const duration = Math.random() * 10 + 5;
             particle.style.animation = `float ${duration}s linear infinite`;
-            
-            particle.addEventListener('animationend', () => {
-                particle.style.left = Math.random() * 100 + 'vw';
-                void particle.offsetWidth;
-                particle.style.animation = `float ${duration}s linear infinite`;
+            particle.addEventListener('animationiteration', () => {
+                particle.style.left = `${Math.random() * 100}vw`;
             });
         }
 
-        // Handle orientation changes
-        window.addEventListener('orientationchange', () => {
-            const particles = document.querySelectorAll('.particle');
-            particles.forEach(particle => {
-                particle.style.left = Math.random() * 100 + 'vw';
-                void particle.offsetWidth;
-                particle.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
-            });
-        });
-
-        // Optimize for mobile devices
-        function optimizeForMobile() {
-            if (window.innerWidth < 768) {
-                // Reduce animation complexity on mobile
-                document.querySelector('.quote-face').style.transform = 'translateZ(10px)';
-                document.querySelector('.quote-face.back').style.transform = 'translateZ(10px) rotateX(180deg)';
-                
-                // Optimize text size for mobile
-                document.querySelector('.quote').style.fontSize = 'clamp(1rem, 4vw, 1.5rem)';
-                document.querySelector('.author').style.fontSize = 'clamp(0.8rem, 3vw, 1rem)';
-            }
-        }
-
-        // Call optimization on load and resize
-        window.addEventListener('load', () => {
-            optimizeForMobile();
-            quoteCache = [...quotes];
-            currentQuoteIndex = -1;
-        });
-
-        window.addEventListener('resize', optimizeForMobile);
-
-        // Optimized quote generation with error handling
+        // Quote Generation
         function generateQuote() {
-            try {
-                // Initialize cache only if needed
-                if (quoteCache.length === 0) {
-                    quoteCache = [...quotes];
-                    currentQuoteIndex = -1;
-                }
+            if (isGenerating) return;
+            isGenerating = true;
 
-                // Get next quote
-                currentQuoteIndex = (currentQuoteIndex + 1) % quoteCache.length;
-                let quote = quoteCache[currentQuoteIndex];
-
-                // Update the display with smooth transition
-                const targetQuote = isFlipped ? quoteElement : quoteBackElement;
-                const targetAuthor = isFlipped ? authorElement : authorBackElement;
-
-                // Prevent duplicate consecutive quotes
-                if (targetQuote.textContent === quote.text) {
-                    currentQuoteIndex = (currentQuoteIndex + 1) % quoteCache.length;
-                    quote = quoteCache[currentQuoteIndex];
-                }
-
-                // Update content without animation first
-                targetQuote.textContent = quote.text;
-                targetAuthor.textContent = `- ${quote.author}`;
-
-                // Use requestAnimationFrame for smooth animation
-                requestAnimationFrame(() => {
-                    quoteContainer.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                    quoteContainer.classList.toggle('flip');
-                    isFlipped = !isFlipped;
-                });
-
-                // Reset timer with improved accuracy
-                timeLeft = 10;
-                lastUpdateTime = Date.now();
-
-                // Ensure auto-generation is running if not paused
-                if (!intervalId && !isPaused) {
-                    startAutoGeneration();
-                }
-            } catch (error) {
-                console.error('Error generating quote:', error);
-                // Simple recovery without shuffling
-                quoteCache = [...quotes];
-                currentQuoteIndex = -1;
+            let availableQuotes = quotes.filter(quote => !usedQuotes.has(`${quote.text}-${quote.author}`));
+            if (availableQuotes.length === 0) {
+                usedQuotes.clear();
+                availableQuotes = quotes;
             }
-        }
 
-        function startAutoGeneration() {
-            stopAutoGeneration(); // Clear any existing interval
+            const quote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
+            const quoteKey = `${quote.text}-${quote.author}`;
+            usedQuotes.add(quoteKey);
+
+            const targetQuote = isFlipped ? quoteElement : quoteBackElement;
+            const targetAuthor = isFlipped ? authorElement : authorBackElement;
+            targetQuote.textContent = quote.text;
+            targetAuthor.textContent = `- ${quote.author}`;
+
+            quoteContainer.classList.toggle('flip');
+            isFlipped = !isFlipped;
+
+            timeLeft = 10;
             lastUpdateTime = Date.now();
-            intervalId = requestAnimationFrame(updateTimer);
-        }
+            updateTimerDisplay();
 
-        function stopAutoGeneration() {
-            if (intervalId) {
-                cancelAnimationFrame(intervalId);
-                intervalId = null;
+            if (!isPaused && !animationFrameId) {
+                startAutoGeneration();
             }
+
+            setTimeout(() => { isGenerating = false; }, 600); // Match transition duration
         }
 
-        // Improved timer update function using requestAnimationFrame
-        function updateTimer() {
-            if (isPaused) return;
-            
-            const currentTime = Date.now();
-            const timeDiff = (currentTime - lastUpdateTime) / 1000;
-            
-            timeLeft = Math.max(0, Math.ceil(10 - timeDiff));
+        // Timer Logic
+        function updateTimerDisplay() {
             const timerText = `Next quote in ${timeLeft}s`;
             timerElement.textContent = timerText;
             timerBackElement.textContent = timerText;
-            
-            if (timeLeft <= 0) {
-                generateQuote();
+        }
+
+        function updateTimer() {
+            if (isPaused) return;
+
+            const currentTime = Date.now();
+            const timeDiff = (currentTime - lastUpdateTime) / 1000; // Convert to seconds
+            if (timeDiff >= 1) {
+                timeLeft = Math.max(0, timeLeft - Math.floor(timeDiff));
+                lastUpdateTime = currentTime;
+                updateTimerDisplay();
+                if (timeLeft === 0) generateQuote();
             }
 
-            // Request next frame for smooth updates
-            if (!isPaused) {
-                intervalId = requestAnimationFrame(updateTimer);
+            if (!isPaused) animationFrameId = requestAnimationFrame(updateTimer);
+        }
+
+        function startAutoGeneration() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(updateTimer);
+        }
+
+        function stopAutoGeneration() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
             }
         }
+
+        // Event Handlers
+        function handleEnter() {
+            intro.classList.add('hidden');
+            main.classList.add('active');
+            createParticles();
+            timeLeft = 10;
+            updateTimerDisplay();
+        }
+
+        function handleGenerate(e) {
+            e.preventDefault();
+            generateQuote();
+        }
+
+        function handlePause() {
+            isPaused = !isPaused;
+            pauseBtn.querySelector('span').textContent = isPaused ? 'Resume Auto' : 'Pause Auto';
+            if (isPaused) stopAutoGeneration();
+            else startAutoGeneration();
+        }
+
+        // Event Listeners
+        enterBtn.addEventListener('click', handleEnter);
+        enterBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleEnter();
+        }, { passive: false });
+
+        generateBtn.addEventListener('click', handleGenerate);
+        generateBtn.addEventListener('touchstart', handleGenerate, { passive: false });
+
+        pauseBtn.addEventListener('click', handlePause);
+        pauseBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handlePause();
+        }, { passive: false });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopAutoGeneration();
+            } else if (!isPaused) {
+                timeLeft = 10;
+                lastUpdateTime = Date.now();
+                updateTimerDisplay();
+                startAutoGeneration();
+            }
+        });
+
+        window.addEventListener('unload', stopAutoGeneration);
     </script>
 </body>
 </html>
