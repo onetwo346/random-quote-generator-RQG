@@ -310,578 +310,137 @@
         let timeLeft = 10;
         let lastUpdateTime = Date.now();
         let isFlipped = false;
-        const usedQuotes = new Set();
-        let lastQuoteKey = null;
+        let quoteCache = [];
+        let currentQuoteIndex = -1;
 
         // Our complete collection of inspiring quotes
         const quotes = [
-            // Original quotes remain unchanged
             { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
             { text: "Innovation is not just a product; it's the process of turning what if into what's next.", author: "Kofi Fosu" },
             { text: "In code, like in life, simplicity is the hidden beauty beneath complexity.", author: "Cosmos Coderr" },
-            { text: "A quiet mind is the best canvas for creating the loudest ideas.", author: "Anonymous" },
-            { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
-            { text: "Every mistake is a lesson waiting to be written into the code of your future.", author: "Kofi Fosu" },
-            { text: "The more you debug your thoughts, the clearer your world becomes.", author: "Cosmos Coderr" },
-            { text: "The greatest discoveries happen when you're lost in the middle of uncertainty.", author: "Anonymous" },
-            { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
-            { text: "Creativity is the key that unlocks the door to new possibilities.", author: "Kofi Fosu" },
-            { text: "The greatest bugs in life often turn out to be the greatest features.", author: "Cosmos Coderr" },
-            { text: "Hope isn't a plan; it's the fuel for the plan you haven't written yet.", author: "Anonymous" },
-            { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
-            { text: "Let your curiosity be the compiler that turns your ideas into reality.", author: "Kofi Fosu" },
-            { text: "In a world full of variables, choose to be the constant.", author: "Cosmos Coderr" },
-            { text: "Sometimes, the most powerful words are the ones left unsaid.", author: "Anonymous" },
-            { text: "Life is what happens when you're busy making other plans.", author: "John Lennon" },
-            { text: "In the code of life, every break is just a pause before the next breakthrough.", author: "Kofi Fosu" },
-            { text: "Every new version of you is a patch to an old system.", author: "Cosmos Coderr" },
-            { text: "The stars don't apologize for shining; they just do.", author: "Anonymous" },
-            { text: "The best revenge is massive success.", author: "Frank Sinatra" },
-            { text: "Your potential is like an unfinished program; it needs constant iteration to become perfect.", author: "Kofi Fosu" },
-            { text: "A line of code, like a thought, can change the direction of an entire universe.", author: "Cosmos Coderr" },
-            { text: "You can't rewrite your past, but you can code your future.", author: "Anonymous" },
-            { text: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
-            { text: "To code is to believe in something that doesn't yet exist and bring it into being.", author: "Kofi Fosu" },
-            { text: "Even the most chaotic systems have a structure, you just need the right algorithm to find it.", author: "Cosmos Coderr" },
-            { text: "Fear is the enemy of progress, but it's also the best teacher.", author: "Anonymous" },
-            { text: "Yesterday you said tomorrow. Just do it.", author: "Nike" },
-            { text: "Your ideas are like variables waiting to be defined. Don't let them remain undefined.", author: "Kofi Fosu" },
-            { text: "Sometimes, the bugs in your code are just opportunities in disguise.", author: "Cosmos Coderr" },
-            { text: "Success doesn't have a blueprint, but it does have a rhythm.", author: "Anonymous" },
-            { text: "Everything you've ever wanted is on the other side of fear.", author: "George Addair" },
-            { text: "A coder is not just someone who writes programs; they are someone who designs the future.", author: "Kofi Fosu" },
-            { text: "In coding, as in life, the hardest problems often have the simplest solutions.", author: "Cosmos Coderr" },
-            { text: "Every step forward, no matter how small, is a victory over yesterday.", author: "Anonymous" },
-            { text: "Dream big and dare to fail.", author: "Norman Vaughan" },
-            { text: "Perfection is a bug that doesn't exist; progress is what keeps the program running.", author: "Kofi Fosu" },
-            { text: "In programming, as in life, it's the small details that often make the biggest impact.", author: "Cosmos Coderr" },
-            { text: "The strongest tree grows in the harshest storms.", author: "Anonymous" },
-            { text: "The harder you work for something, the greater you'll feel when you achieve it.", author: "Anonymous" },
-            { text: "In the world of infinite possibilities, creativity is the only constant compiler.", author: "Kofi Fosu" },
-            { text: "You don't need to see the whole code to start coding, just one line is enough to make a difference.", author: "Cosmos Coderr" },
-            { text: "Failure is a mirror that reflects your strength, not your weakness.", author: "Anonymous" },
-            { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
-            { text: "In a sea of data, it's your imagination that will make you float.", author: "Kofi Fosu" },
-            { text: "Life, like code, is a set of instructions. Don't just follow the script—create your own.", author: "Cosmos Coderr" },
-            { text: "Sometimes the road less traveled isn't less traveled; it's just harder to see.", author: "Anonymous" },
-            { text: "The only person you are destined to become is the person you decide to be.", author: "Ralph Waldo Emerson" },
-            { text: "The journey of a thousand algorithms begins with one line of curiosity.", author: "Kofi Fosu" },
-            { text: "Code may not be poetry, but it certainly has its own rhythm.", author: "Cosmos Coderr" },
-            { text: "Wisdom comes not from knowing the answers but from asking the right questions.", author: "Anonymous" },
-            { text: "Success is walking from failure to failure with no loss of enthusiasm.", author: "Winston Churchill" },
-            { text: "In the end, it's not about the code you've written, but the lives you've impacted.", author: "Kofi Fosu" },
-            { text: "Greatness is built by those who dare to write their own functions and follow their own path.", author: "Cosmos Coderr" },
-            { text: "Your greatest treasure lies in the lessons you learn when you lose everything.", author: "Anonymous" },
-            { text: "What you get by achieving your goals is not as important as what you become.", author: "Zig Ziglar" },
-            { text: "The path to greatness is never a straight line, but a thousand zigzags.", author: "Anonymous" },
-            { text: "A moment of chaos often leads to a breakthrough of clarity.", author: "Anonymous" },
-            { text: "The best ideas are not always the loudest, but they are always the most persistent.", author: "Anonymous" },
-            { text: "Time doesn't heal; it just teaches you how to live with the scars.", author: "Anonymous" },
-            { text: "The art of being human is in learning to dance with uncertainty.", author: "Anonymous" },
-            { text: "Not every dream is meant to be chased, but every dream teaches something valuable.", author: "Anonymous" },
-            { text: "Strength isn't about how much you can carry; it's about how much you can release.", author: "Anonymous" },
-            { text: "In the end, it's not the big wins that matter; it's the small, consistent steps forward.", author: "Anonymous" },
-            { text: "Sometimes the best way to move forward is to pause and breathe deeply.", author: "Anonymous" },
-            { text: "Success isn't found in the destination but in the journey of becoming.", author: "Anonymous" },
-            { text: "Courage doesn't roar; it whispers through the heart when no one's listening.", author: "Anonymous" },
-            { text: "The best way to grow is to let go of the idea that you need to stay the same.", author: "Anonymous" },
-            { text: "Life doesn't need to be perfect to be extraordinary.", author: "Anonymous" },
-            { text: "The strongest people are those who can forgive themselves.", author: "Anonymous" },
-            { text: "When you're lost, the compass inside you is always pointing towards the lesson.", author: "Anonymous" },
-            { text: "To understand the stars, you must first learn how to look beyond the clouds.", author: "Anonymous" },
-            { text: "Failure is a footnote in the story of success, not the title.", author: "Anonymous" },
-            { text: "Sometimes the most powerful thing you can do is nothing at all.", author: "Anonymous" },
-            { text: "Dreams are like seeds; some take years to bloom, but all are worth planting.", author: "Anonymous" },
-            { text: "The heart knows the truth even when the mind is confused.", author: "Anonymous" },
-            { text: "People aren't afraid of failure; they're afraid of not trying.", author: "Anonymous" },
-            { text: "The smallest act of kindness can change the course of someone's day, or even their life.", author: "Anonymous" },
-            { text: "A single thought can change the course of a lifetime if you let it.", author: "Anonymous" },
-            { text: "Your future is shaped by the questions you ask, not the answers you have.", author: "Anonymous" },
-            { text: "The best moments in life aren't the ones we plan, but the ones we allow ourselves to experience.", author: "Anonymous" },
-            { text: "It's not the weight of the world that breaks you, but the way you carry it.", author: "Anonymous" },
-            { text: "The most beautiful things in life are often the simplest, but hardest to appreciate.", author: "Anonymous" },
-            { text: "The distance between who you are and who you want to be is bridged by action.", author: "Anonymous" },
-            { text: "Life is a puzzle, and the pieces don't always fit, but they always make a picture.", author: "Anonymous" },
-            { text: "Success isn't measured in milestones but in the moments you choose to show up.", author: "Anonymous" },
-            { text: "Sometimes, the best way to find clarity is to stop looking for it.", author: "Anonymous" },
-            { text: "The strongest winds create the most unbreakable roots.", author: "Anonymous" },
-            { text: "Happiness is a choice, but so is the courage to seek it.", author: "Anonymous" },
-            { text: "Every challenge is a lesson waiting to unfold, even if it's wrapped in a struggle.", author: "Anonymous" },
-            { text: "When you stop searching for answers, you may just find the right question.", author: "Anonymous" },
-            { text: "Life doesn't care how fast you run; it only asks if you're willing to keep going.", author: "Anonymous" },
-            // New quotes being added
-            { text: "Sometimes, the best way to move forward is to take a step back and re-evaluate.", author: "Anonymous" },
-            { text: "Strength is found not in how loudly we speak, but in how quietly we stand.", author: "Anonymous" },
-            { text: "The most valuable lessons come wrapped in the most difficult experiences.", author: "Anonymous" },
-            { text: "The future is a mystery, and you're the author of the plot.", author: "Anonymous" },
-            { text: "In the darkest moments, your light shines the brightest.", author: "Anonymous" },
-            { text: "Fear is just a shadow of the potential you haven't realized yet.", author: "Anonymous" },
-            { text: "The best stories are written with the ink of persistence.", author: "Anonymous" },
-            { text: "In life, there are no mistakes, only lessons in disguise.", author: "Anonymous" },
-            { text: "Change is a doorway; courage is the key to unlocking it.", author: "Anonymous" },
-            { text: "The world's greatest wonders are often hidden in plain sight.", author: "Anonymous" },
-            { text: "In every failure, there's a seed of success waiting to sprout.", author: "Anonymous" },
-            { text: "To move mountains, you must first learn how to move yourself.", author: "Anonymous" },
-            { text: "Perfection is a myth; growth is a constant reality.", author: "Anonymous" },
-            { text: "The quietest voices often carry the most powerful messages.", author: "Anonymous" },
-            { text: "Happiness isn't something you find; it's something you create.", author: "Anonymous" },
-            { text: "The best view comes after the hardest climb.", author: "Anonymous" },
-            { text: "Challenges are just opportunities wearing disguises.", author: "Anonymous" },
-            { text: "No matter how far you've come, there's always room for more progress.", author: "Anonymous" },
-            { text: "A single spark can ignite a whole forest of possibilities.", author: "Anonymous" },
-            { text: "Every day is a new chance to write your own story.", author: "Anonymous" },
-            { text: "The biggest risk is not taking any risks at all.", author: "Anonymous" },
-            { text: "Dreams don't have expiration dates, only new beginnings.", author: "Anonymous" },
-            { text: "Strength is built not in comfort, but in overcoming adversity.", author: "Anonymous" },
-            { text: "Every sunset brings a new opportunity for a fresh start.", author: "Anonymous" },
-            { text: "Life is a series of moments; make each one meaningful.", author: "Anonymous" },
-            { text: "Sometimes, the right path is the one you can't see.", author: "Anonymous" },
-            { text: "Don't chase the destination; savor the journey.", author: "Anonymous" },
-            { text: "A life without challenges is a life without growth.", author: "Anonymous" },
-            { text: "Hope is the silent whisper that keeps us moving forward.", author: "Anonymous" },
-            { text: "Sometimes the greatest victories are the quiet ones.", author: "Anonymous" },
-            { text: "Success isn't a destination, it's a journey of constant evolution.", author: "Anonymous" },
-            { text: "Your future is a reflection of the actions you take today.", author: "Anonymous" },
-            { text: "The most beautiful things in life are the ones you don't expect.", author: "Anonymous" },
-            { text: "You don't need to see the whole staircase, just the next step.", author: "Anonymous" },
-            { text: "The more you embrace uncertainty, the more you'll discover about yourself.", author: "Anonymous" },
-            { text: "Life isn't about finding yourself; it's about creating who you want to be.", author: "Anonymous" },
-            { text: "Time doesn't wait, but it's never too late to start.", author: "Anonymous" },
-            { text: "The strongest roots grow in the deepest soil.", author: "Anonymous" },
-            { text: "Success isn't handed to you; it's earned with every decision you make.", author: "Anonymous" },
-            { text: "You are the architect of your own destiny.", author: "Anonymous" },
-            { text: "The power of now is the key to unlocking tomorrow.", author: "Anonymous" },
-            { text: "Every setback is a setup for a comeback.", author: "Anonymous" },
-            { text: "Don't let your dreams be dreams; let them be your reality.", author: "Anonymous" },
-            { text: "Life is a mosaic of moments, and each one matters.", author: "Anonymous" },
-            { text: "Gratitude turns ordinary moments into extraordinary ones.", author: "Anonymous" },
-            { text: "The journey is never about the destination; it's about who you become along the way.", author: "Anonymous" },
-            { text: "In the silence, we often find the answers we've been seeking.", author: "Anonymous" },
-            { text: "The future belongs to those who dare to dream and act.", author: "Anonymous" },
-            { text: "You can't change the past, but you can shape the future.", author: "Anonymous" },
-            { text: "Life is a puzzle; it doesn't always fit, but the pieces come together in time.", author: "Anonymous" },
-            { text: "You don't need permission to be great.", author: "Anonymous" },
-            { text: "Sometimes, all you need is a new perspective to see endless possibilities.", author: "Anonymous" },
-            { text: "Courage is the spark that turns dreams into reality.", author: "Anonymous" },
-            { text: "Every small step is a giant leap towards your future.", author: "Anonymous" },
-            { text: "Success is the result of doing the hard things when others won't.", author: "Anonymous" },
-            { text: "Failure is just success in disguise.", author: "Anonymous" },
-            { text: "Sometimes, your biggest breakthrough comes from your darkest hour.", author: "Anonymous" },
-            { text: "Every challenge is a chance to become the best version of yourself.", author: "Anonymous" },
-            { text: "Happiness is a choice you make, not a condition you wait for.", author: "Anonymous" },
-            { text: "Your mindset shapes the reality you live in.", author: "Anonymous" },
-            { text: "The key to progress is a willingness to learn, unlearn, and relearn.", author: "Anonymous" },
-            { text: "In life, you have to create your own opportunities.", author: "Anonymous" },
-            { text: "Your story is still being written, and you hold the pen.", author: "Anonymous" },
-            { text: "You are the sum of the choices you make, not the circumstances you face.", author: "Anonymous" },
-            { text: "Life's most precious moments are the ones we create ourselves.", author: "Anonymous" },
-            { text: "Success is not about what you have, but what you give.", author: "Anonymous" },
-            { text: "The best time to start was yesterday. The second best time is now.", author: "Anonymous" },
-            { text: "The more you let go, the more you make room for what truly matters.", author: "Anonymous" },
-            { text: "Greatness is not something you achieve; it's something you embody.", author: "Anonymous" },
-            { text: "Challenges are the stepping stones to greatness.", author: "Anonymous" },
-            { text: "There is no failure, only feedback.", author: "Anonymous" },
-            { text: "The beauty of life is that every day gives you a fresh canvas.", author: "Anonymous" },
-            { text: "The path to success is never a straight line; it's a winding road of persistence.", author: "Anonymous" },
-            { text: "Success doesn't require perfection, only progress.", author: "Anonymous" },
-            { text: "True strength lies in how you rise after a fall.", author: "Anonymous" },
-            { text: "The only way to truly fail is to stop trying.", author: "Anonymous" },
-            { text: "Life is a series of chapters; some are hard, but they're all part of the story.", author: "Anonymous" },
-            { text: "You can't grow if you're too afraid to change.", author: "Anonymous" },
-            { text: "Don't wait for the perfect moment; create it.", author: "Anonymous" },
-            { text: "The best investment you can make is in yourself.", author: "Anonymous" },
-            { text: "Life's beauty lies in its unpredictability.", author: "Anonymous" },
-            { text: "Your value is not determined by your past, but by the future you create.", author: "Anonymous" },
-            { text: "You are never too old to set a new goal or dream a new dream.", author: "Anonymous" },
-            { text: "The true measure of success is how you make others feel.", author: "Anonymous" },
-            { text: "The only way to truly find yourself is to lose yourself in the pursuit of something greater.", author: "Anonymous" },
-            { text: "Change begins when you decide to break free from the ordinary.", author: "Anonymous" },
-            { text: "The greatest growth happens when you push past your comfort zone.", author: "Anonymous" },
-            { text: "The only thing standing between you and your dreams is the belief that you can achieve them.", author: "Anonymous" },
-            { text: "Success is less about what you achieve and more about who you become along the way.", author: "Anonymous" },
-            { text: "The more you embrace change, the more you welcome opportunities.", author: "Anonymous" },
-            { text: "It's not the challenges that define you, but how you rise above them.", author: "Anonymous" },
-            { text: "The universe has a way of aligning with your intentions when you take action.", author: "Anonymous" },
-            { text: "The heart knows what the mind hasn't figured out yet.", author: "Anonymous" },
-            { text: "In every dark moment, there's an opportunity for light to shine.", author: "Anonymous" },
-            { text: "The best way to find your purpose is to get lost in what you love.", author: "Anonymous" },
-            { text: "Every dream begins with a single thought; let that thought be bold.", author: "Anonymous" },
-            { text: "The road to success is built on resilience, not perfection.", author: "Anonymous" },
-            { text: "The art of living lies in embracing the beauty of uncertainty.", author: "Anonymous" },
-            { text: "Life is too short to spend it in fear; chase what excites you.", author: "Anonymous" },
-            { text: "Courage doesn't mean you're not afraid; it means you keep moving forward despite the fear.", author: "Anonymous" },
-            { text: "In every challenge, there's a hidden opportunity.", author: "Anonymous" },
-            { text: "Dream big, but take small steps.", author: "Anonymous" },
-            { text: "It's not about being the best; it's about being your best.", author: "Anonymous" },
-            { text: "Sometimes, the biggest victories come from the smallest acts of bravery.", author: "Anonymous" },
-            { text: "Success is a journey, not a destination.", author: "Anonymous" },
-            { text: "The world opens up when you stop trying to control it.", author: "Anonymous" },
-            { text: "Your life is a reflection of your thoughts; choose them wisely.", author: "Anonymous" },
-            { text: "The more you give, the more you grow.", author: "Anonymous" },
-            { text: "The secret to happiness is learning how to appreciate the simple things.", author: "Anonymous" },
-            { text: "Life is a dance between letting go and holding on.", author: "Anonymous" },
-            { text: "True strength is found in vulnerability.", author: "Anonymous" },
-            { text: "Don't chase success; build it from the inside out.", author: "Anonymous" },
-            { text: "The only limits that exist are the ones you place on yourself.", author: "Anonymous" },
-            { text: "Life doesn't have to be perfect to be beautiful.", author: "Anonymous" },
-            { text: "Growth happens when you stop settling for what's comfortable.", author: "Anonymous" },
-            { text: "The hardest part of the journey is taking the first step.", author: "Anonymous" },
-            { text: "Dreams are meant to be chased, not just wished for.", author: "Anonymous" },
-            { text: "Every small victory is a building block for a bigger one.", author: "Anonymous" },
-            { text: "In every setback, there's an opportunity to learn.", author: "Anonymous" },
-            { text: "Success is born from the willingness to keep going when others stop.", author: "Anonymous" },
-            { text: "Don't just follow the path; create your own trail.", author: "Anonymous" },
-            { text: "Happiness is found in the moments between the chaos.", author: "Anonymous" },
-            { text: "The best things in life are often the ones you don't plan.", author: "Anonymous" },
-            { text: "Your potential is limitless, but it requires constant action to unlock.", author: "Anonymous" },
-            { text: "The best way to predict the future is to create it.", author: "Anonymous" },
-            { text: "Life doesn't need to be flawless; it just needs to be lived.", author: "Anonymous" },
-            { text: "The greatest power lies in the ability to believe in yourself.", author: "Anonymous" },
-            { text: "Success is less about achieving and more about becoming.", author: "Anonymous" },
-            { text: "Don't wait for opportunities; create them.", author: "Anonymous" },
-            { text: "Every experience is a chance to become a better version of yourself.", author: "Anonymous" },
-            { text: "You are the master of your fate; the captain of your soul.", author: "Anonymous" },
-            { text: "The most beautiful things in life are often the simplest.", author: "Anonymous" },
-            { text: "Don't fear failure; fear the regret of never trying.", author: "Anonymous" },
-            { text: "The true measure of success is how much you inspire others.", author: "Anonymous" },
-            { text: "Growth is never easy, but it's always worth it.", author: "Anonymous" },
-            { text: "Embrace the uncertainty of life, for it holds the greatest possibilities.", author: "Anonymous" },
-            { text: "True peace is found in accepting things as they are, not as you wish them to be.", author: "Anonymous" },
-            { text: "To succeed, you must first believe that you can.", author: "Anonymous" },
-            { text: "Success comes not from avoiding failure, but from learning to rise after each fall.", author: "Anonymous" },
-            { text: "Greatness isn't handed to you; it's earned through persistence.", author: "Anonymous" },
-            { text: "Don't be afraid to stand out; it's your uniqueness that makes you extraordinary.", author: "Anonymous" },
-            { text: "Every moment is a chance to start anew.", author: "Anonymous" },
-            { text: "You are the artist of your own life. Paint your masterpiece.", author: "Anonymous" },
-            { text: "The best things come to those who keep moving forward.", author: "Anonymous" },
-            { text: "Sometimes the hardest choices bring the greatest rewards.", author: "Anonymous" },
-            { text: "The world belongs to those who believe in the power of their dreams.", author: "Anonymous" },
-            { text: "Happiness is a habit, not a destination.", author: "Anonymous" },
-            { text: "True wisdom is knowing that you don't know everything.", author: "Anonymous" },
-            { text: "Success is built on the small, consistent actions you take every day.", author: "Anonymous" },
-            { text: "In the face of adversity, choose to rise.", author: "Anonymous" },
-            { text: "The biggest adventures begin when you step out of your comfort zone.", author: "Anonymous" },
-            { text: "A true leader inspires others to be their best selves.", author: "Anonymous" },
-            { text: "What you do today shapes the life you'll live tomorrow.", author: "Anonymous" },
-            { text: "In every challenge lies the opportunity for growth.", author: "Anonymous" },
-            { text: "Life is about creating and living experiences that are worth sharing.", author: "Anonymous" },
-            { text: "Success is a journey, not a competition.", author: "Anonymous" },
-            { text: "The greatest strength is not in how you stand, but in how you rise after falling.", author: "Anonymous" },
-            { text: "It's the little things that make the biggest difference.", author: "Anonymous" },
-            { text: "Every journey begins with the courage to take the first step.", author: "Anonymous" },
-            { text: "Your dreams are only as big as the action you take to achieve them.", author: "Anonymous" },
-            { text: "True beauty lies in being yourself.", author: "Anonymous" },
-            { text: "You cannot change the direction of the wind, but you can adjust your sails.", author: "Anonymous" },
-            { text: "Every day is a new opportunity to rewrite your story.", author: "Anonymous" },
-            { text: "Success is not about being better than others; it's about being better than you were yesterday.", author: "Anonymous" },
-            { text: "Don't be afraid to fail; be afraid to miss the chance to try.", author: "Anonymous" },
-            { text: "Every step you take brings you closer to the person you were meant to be.", author: "Anonymous" },
-            { text: "Success is a product of persistence, not perfection.", author: "Anonymous" },
-            { text: "The only thing standing between you and your dreams is the action you take today.", author: "Anonymous" },
-            { text: "Great things never come from comfort zones.", author: "Anonymous" },
-            { text: "You become what you believe in.", author: "Anonymous" },
-            { text: "The only way to truly fail is to give up.", author: "Anonymous" },
-            { text: "The journey to success is always under construction.", author: "Anonymous" },
-            { text: "Life is a journey of growth, not a race to the finish.", author: "Anonymous" },
-            { text: "Each challenge is a chance to grow stronger.", author: "Anonymous" },
-            { text: "Don't just exist—live with purpose.", author: "Anonymous" },
-            { text: "Success is less about talent and more about tenacity.", author: "Anonymous" },
-            { text: "When life gets tough, remember that you're tougher.", author: "Anonymous" },
-            { text: "The beauty of life is in its unpredictability.", author: "Anonymous" },
-            { text: "The secret to happiness is to find beauty in the ordinary.", author: "Anonymous" },
-            { text: "Life is about progress, not perfection.", author: "Anonymous" },
-            { text: "Don't just wish for success—work for it.", author: "Anonymous" },
-            { text: "Success comes from the willingness to keep going despite the setbacks.", author: "Anonymous" },
-            { text: "True strength lies in showing up even when it's hard.", author: "Anonymous" },
-            { text: "Happiness is a choice, not a circumstance.", author: "Anonymous" },
-            { text: "Change is the only constant; embrace it.", author: "Anonymous" },
-            { text: "Success is measured by the lives you touch, not by the wealth you accumulate.", author: "Anonymous" },
-            { text: "Your future is shaped by the decisions you make today.", author: "Anonymous" },
-            { text: "The key to success is believing you're capable of achieving it.", author: "Anonymous" },
-            { text: "You are the only person who can limit your potential.", author: "Anonymous" },
-            { text: "Success is born from passion, driven by determination.", author: "Anonymous" },
-            { text: "Life is a journey meant to be experienced, not just endured.", author: "Anonymous" },
-            { text: "Success is not about being the best; it's about being your best.", author: "Anonymous" },
-            { text: "Be the change you wish to see in the world.", author: "Anonymous" },
-            { text: "Success comes when you refuse to give up.", author: "Anonymous" },
-            { text: "Each day brings a new opportunity to grow and evolve.", author: "Anonymous" },
-            { text: "Happiness is a journey, not a destination.", author: "Anonymous" },
             { text: "Your life is your message to the world; make it count", author: "Anonymous" }
         ];
 
-        // Add new quotes to the existing collection
-        quotes.push(
-            { text: "Sometimes, the best way to move forward is to take a step back and re-evaluate.", author: "Anonymous" },
-            { text: "Strength is found not in how loudly we speak, but in how quietly we stand.", author: "Anonymous" },
-            { text: "The most valuable lessons come wrapped in the most difficult experiences.", author: "Anonymous" },
-            { text: "The future is a mystery, and you're the author of the plot.", author: "Anonymous" },
-            { text: "In the darkest moments, your light shines the brightest.", author: "Anonymous" },
-            { text: "Fear is just a shadow of the potential you haven't realized yet.", author: "Anonymous" },
-            { text: "The best stories are written with the ink of persistence.", author: "Anonymous" },
-            { text: "In life, there are no mistakes, only lessons in disguise.", author: "Anonymous" },
-            { text: "Change is a doorway; courage is the key to unlocking it.", author: "Anonymous" },
-            { text: "The world's greatest wonders are often hidden in plain sight.", author: "Anonymous" },
-            { text: "In every failure, there's a seed of success waiting to sprout.", author: "Anonymous" },
-            { text: "To move mountains, you must first learn how to move yourself.", author: "Anonymous" },
-            { text: "Perfection is a myth; growth is a constant reality.", author: "Anonymous" },
-            { text: "The quietest voices often carry the most powerful messages.", author: "Anonymous" },
-            { text: "Happiness isn't something you find; it's something you create.", author: "Anonymous" },
-            { text: "The best view comes after the hardest climb.", author: "Anonymous" },
-            { text: "Challenges are just opportunities wearing disguises.", author: "Anonymous" },
-            { text: "No matter how far you've come, there's always room for more progress.", author: "Anonymous" },
-            { text: "A single spark can ignite a whole forest of possibilities.", author: "Anonymous" },
-            { text: "Every day is a new chance to write your own story.", author: "Anonymous" },
-            { text: "The biggest risk is not taking any risks at all.", author: "Anonymous" },
-            { text: "Dreams don't have expiration dates, only new beginnings.", author: "Anonymous" },
-            { text: "Strength is built not in comfort, but in overcoming adversity.", author: "Anonymous" },
-            { text: "Every sunset brings a new opportunity for a fresh start.", author: "Anonymous" },
-            { text: "Life is a series of moments; make each one meaningful.", author: "Anonymous" },
-            { text: "Sometimes, the right path is the one you can't see.", author: "Anonymous" },
-            { text: "Don't chase the destination; savor the journey.", author: "Anonymous" },
-            { text: "A life without challenges is a life without growth.", author: "Anonymous" },
-            { text: "Hope is the silent whisper that keeps us moving forward.", author: "Anonymous" },
-            { text: "Sometimes the greatest victories are the quiet ones.", author: "Anonymous" },
-            { text: "Success isn't a destination, it's a journey of constant evolution.", author: "Anonymous" },
-            { text: "Your future is a reflection of the actions you take today.", author: "Anonymous" },
-            { text: "The most beautiful things in life are the ones you don't expect.", author: "Anonymous" },
-            { text: "You don't need to see the whole staircase, just the next step.", author: "Anonymous" },
-            { text: "The more you embrace uncertainty, the more you'll discover about yourself.", author: "Anonymous" },
-            { text: "Life isn't about finding yourself; it's about creating who you want to be.", author: "Anonymous" },
-            { text: "Time doesn't wait, but it's never too late to start.", author: "Anonymous" },
-            { text: "The strongest roots grow in the deepest soil.", author: "Anonymous" },
-            { text: "Success isn't handed to you; it's earned with every decision you make.", author: "Anonymous" },
-            { text: "You are the architect of your own destiny.", author: "Anonymous" },
-            { text: "The power of now is the key to unlocking tomorrow.", author: "Anonymous" },
-            { text: "Every setback is a setup for a comeback.", author: "Anonymous" },
-            { text: "Don't let your dreams be dreams; let them be your reality.", author: "Anonymous" },
-            { text: "Life is a mosaic of moments, and each one matters.", author: "Anonymous" },
-            { text: "Gratitude turns ordinary moments into extraordinary ones.", author: "Anonymous" },
-            { text: "The journey is never about the destination; it's about who you become along the way.", author: "Anonymous" },
-            { text: "In the silence, we often find the answers we've been seeking.", author: "Anonymous" },
-            { text: "The future belongs to those who dare to dream and act.", author: "Anonymous" },
-            { text: "You can't change the past, but you can shape the future.", author: "Anonymous" },
-            { text: "Life is a puzzle; it doesn't always fit, but the pieces come together in time.", author: "Anonymous" },
-            { text: "You don't need permission to be great.", author: "Anonymous" },
-            { text: "Sometimes, all you need is a new perspective to see endless possibilities.", author: "Anonymous" },
-            { text: "Courage is the spark that turns dreams into reality.", author: "Anonymous" },
-            { text: "Every small step is a giant leap towards your future.", author: "Anonymous" },
-            { text: "Success is the result of doing the hard things when others won't.", author: "Anonymous" },
-            { text: "Failure is just success in disguise.", author: "Anonymous" },
-            { text: "Sometimes, your biggest breakthrough comes from your darkest hour.", author: "Anonymous" },
-            { text: "Every challenge is a chance to become the best version of yourself.", author: "Anonymous" },
-            { text: "Happiness is a choice you make, not a condition you wait for.", author: "Anonymous" },
-            { text: "Your mindset shapes the reality you live in.", author: "Anonymous" },
-            { text: "The key to progress is a willingness to learn, unlearn, and relearn.", author: "Anonymous" },
-            { text: "In life, you have to create your own opportunities.", author: "Anonymous" },
-            { text: "Your story is still being written, and you hold the pen.", author: "Anonymous" },
-            { text: "You are the sum of the choices you make, not the circumstances you face.", author: "Anonymous" },
-            { text: "Life's most precious moments are the ones we create ourselves.", author: "Anonymous" },
-            { text: "Success is not about what you have, but what you give.", author: "Anonymous" },
-            { text: "The best time to start was yesterday. The second best time is now.", author: "Anonymous" },
-            { text: "The more you let go, the more you make room for what truly matters.", author: "Anonymous" },
-            { text: "Greatness is not something you achieve; it's something you embody.", author: "Anonymous" },
-            { text: "Challenges are the stepping stones to greatness.", author: "Anonymous" },
-            { text: "There is no failure, only feedback.", author: "Anonymous" },
-            { text: "The beauty of life is that every day gives you a fresh canvas.", author: "Anonymous" },
-            { text: "The path to success is never a straight line; it's a winding road of persistence.", author: "Anonymous" },
-            { text: "Success doesn't require perfection, only progress.", author: "Anonymous" },
-            { text: "True strength lies in how you rise after a fall.", author: "Anonymous" },
-            { text: "The only way to truly fail is to stop trying.", author: "Anonymous" },
-            { text: "Life is a series of chapters; some are hard, but they're all part of the story.", author: "Anonymous" },
-            { text: "You can't grow if you're too afraid to change.", author: "Anonymous" },
-            { text: "Don't wait for the perfect moment; create it.", author: "Anonymous" },
-            { text: "The best investment you can make is in yourself.", author: "Anonymous" },
-            { text: "Life's beauty lies in its unpredictability.", author: "Anonymous" },
-            { text: "Your value is not determined by your past, but by the future you create.", author: "Anonymous" },
-            { text: "You are never too old to set a new goal or dream a new dream.", author: "Anonymous" },
-            { text: "The true measure of success is how you make others feel.", author: "Anonymous" },
-            { text: "The only way to truly find yourself is to lose yourself in the pursuit of something greater.", author: "Anonymous" },
-            { text: "Change begins when you decide to break free from the ordinary.", author: "Anonymous" },
-            { text: "The greatest growth happens when you push past your comfort zone.", author: "Anonymous" },
-            { text: "The only thing standing between you and your dreams is the belief that you can achieve them.", author: "Anonymous" },
-            { text: "Success is less about what you achieve and more about who you become along the way.", author: "Anonymous" },
-            { text: "The more you embrace change, the more you welcome opportunities.", author: "Anonymous" },
-            { text: "It's not the challenges that define you, but how you rise above them.", author: "Anonymous" },
-            { text: "The universe has a way of aligning with your intentions when you take action.", author: "Anonymous" },
-            { text: "The heart knows what the mind hasn't figured out yet.", author: "Anonymous" },
-            { text: "In every dark moment, there's an opportunity for light to shine.", author: "Anonymous" },
-            { text: "The best way to find your purpose is to get lost in what you love.", author: "Anonymous" },
-            { text: "Every dream begins with a single thought; let that thought be bold.", author: "Anonymous" },
-            { text: "The road to success is built on resilience, not perfection.", author: "Anonymous" },
-            { text: "The art of living lies in embracing the beauty of uncertainty.", author: "Anonymous" },
-            { text: "Life is too short to spend it in fear; chase what excites you.", author: "Anonymous" },
-            { text: "Courage doesn't mean you're not afraid; it means you keep moving forward despite the fear.", author: "Anonymous" },
-            { text: "In every challenge, there's a hidden opportunity.", author: "Anonymous" },
-            { text: "Dream big, but take small steps.", author: "Anonymous" },
-            { text: "It's not about being the best; it's about being your best.", author: "Anonymous" },
-            { text: "Sometimes, the biggest victories come from the smallest acts of bravery.", author: "Anonymous" },
-            { text: "Success is a journey, not a destination.", author: "Anonymous" },
-            { text: "The world opens up when you stop trying to control it.", author: "Anonymous" },
-            { text: "Your life is a reflection of your thoughts; choose them wisely.", author: "Anonymous" },
-            { text: "The more you give, the more you grow.", author: "Anonymous" },
-            { text: "The secret to happiness is learning how to appreciate the simple things.", author: "Anonymous" },
-            { text: "Life is a dance between letting go and holding on.", author: "Anonymous" },
-            { text: "True strength is found in vulnerability.", author: "Anonymous" },
-            { text: "Don't chase success; build it from the inside out.", author: "Anonymous" },
-            { text: "The only limits that exist are the ones you place on yourself.", author: "Anonymous" },
-            { text: "Life doesn't have to be perfect to be beautiful.", author: "Anonymous" },
-            { text: "Growth happens when you stop settling for what's comfortable.", author: "Anonymous" },
-            { text: "The hardest part of the journey is taking the first step.", author: "Anonymous" },
-            { text: "Dreams are meant to be chased, not just wished for.", author: "Anonymous" },
-            { text: "Every small victory is a building block for a bigger one.", author: "Anonymous" },
-            { text: "In every setback, there's an opportunity to learn.", author: "Anonymous" },
-            { text: "Success is born from the willingness to keep going when others stop.", author: "Anonymous" },
-            { text: "Don't just follow the path; create your own trail.", author: "Anonymous" },
-            { text: "Happiness is found in the moments between the chaos.", author: "Anonymous" },
-            { text: "The best things in life are often the ones you don't plan.", author: "Anonymous" },
-            { text: "Your potential is limitless, but it requires constant action to unlock.", author: "Anonymous" },
-            { text: "The best way to predict the future is to create it.", author: "Anonymous" },
-            { text: "Life doesn't need to be flawless; it just needs to be lived.", author: "Anonymous" },
-            { text: "The greatest power lies in the ability to believe in yourself.", author: "Anonymous" },
-            { text: "Success is less about achieving and more about becoming.", author: "Anonymous" },
-            { text: "Don't wait for opportunities; create them.", author: "Anonymous" },
-            { text: "Every experience is a chance to become a better version of yourself.", author: "Anonymous" },
-            { text: "You are the master of your fate; the captain of your soul.", author: "Anonymous" },
-            { text: "The most beautiful things in life are often the simplest.", author: "Anonymous" },
-            { text: "Don't fear failure; fear the regret of never trying.", author: "Anonymous" },
-            { text: "The true measure of success is how much you inspire others.", author: "Anonymous" },
-            { text: "Growth is never easy, but it's always worth it.", author: "Anonymous" },
-            { text: "Embrace the uncertainty of life, for it holds the greatest possibilities.", author: "Anonymous" },
-            { text: "True peace is found in accepting things as they are, not as you wish them to be.", author: "Anonymous" },
-            { text: "To succeed, you must first believe that you can.", author: "Anonymous" },
-            { text: "Success comes not from avoiding failure, but from learning to rise after each fall.", author: "Anonymous" },
-            { text: "Greatness isn't handed to you; it's earned through persistence.", author: "Anonymous" },
-            { text: "Don't be afraid to stand out; it's your uniqueness that makes you extraordinary.", author: "Anonymous" },
-            { text: "Every moment is a chance to start anew.", author: "Anonymous" },
-            { text: "You are the artist of your own life. Paint your masterpiece.", author: "Anonymous" },
-            { text: "The best things come to those who keep moving forward.", author: "Anonymous" },
-            { text: "Sometimes the hardest choices bring the greatest rewards.", author: "Anonymous" },
-            { text: "The world belongs to those who believe in the power of their dreams.", author: "Anonymous" },
-            { text: "Happiness is a habit, not a destination.", author: "Anonymous" },
-            { text: "True wisdom is knowing that you don't know everything.", author: "Anonymous" },
-            { text: "Success is built on the small, consistent actions you take every day.", author: "Anonymous" },
-            { text: "In the face of adversity, choose to rise.", author: "Anonymous" },
-            { text: "The biggest adventures begin when you step out of your comfort zone.", author: "Anonymous" },
-            { text: "A true leader inspires others to be their best selves.", author: "Anonymous" },
-            { text: "What you do today shapes the life you'll live tomorrow.", author: "Anonymous" },
-            { text: "In every challenge lies the opportunity for growth.", author: "Anonymous" },
-            { text: "Life is about creating and living experiences that are worth sharing.", author: "Anonymous" },
-            { text: "Success is a journey, not a competition.", author: "Anonymous" },
-            { text: "The greatest strength is not in how you stand, but in how you rise after falling.", author: "Anonymous" },
-            { text: "It's the little things that make the biggest difference.", author: "Anonymous" },
-            { text: "Every journey begins with the courage to take the first step.", author: "Anonymous" },
-            { text: "Your dreams are only as big as the action you take to achieve them.", author: "Anonymous" },
-            { text: "True beauty lies in being yourself.", author: "Anonymous" },
-            { text: "You cannot change the direction of the wind, but you can adjust your sails.", author: "Anonymous" },
-            { text: "Every day is a new opportunity to rewrite your story.", author: "Anonymous" },
-            { text: "Success is not about being better than others; it's about being better than you were yesterday.", author: "Anonymous" },
-            { text: "Don't be afraid to fail; be afraid to miss the chance to try.", author: "Anonymous" },
-            { text: "Every step you take brings you closer to the person you were meant to be.", author: "Anonymous" },
-            { text: "Success is a product of persistence, not perfection.", author: "Anonymous" },
-            { text: "The only thing standing between you and your dreams is the action you take today.", author: "Anonymous" },
-            { text: "Great things never come from comfort zones.", author: "Anonymous" },
-            { text: "You become what you believe in.", author: "Anonymous" },
-            { text: "The only way to truly fail is to give up.", author: "Anonymous" },
-            { text: "The journey to success is always under construction.", author: "Anonymous" },
-            { text: "Life is a journey of growth, not a race to the finish.", author: "Anonymous" },
-            { text: "Each challenge is a chance to grow stronger.", author: "Anonymous" },
-            { text: "Don't just exist—live with purpose.", author: "Anonymous" },
-            { text: "Success is less about talent and more about tenacity.", author: "Anonymous" },
-            { text: "When life gets tough, remember that you're tougher.", author: "Anonymous" },
-            { text: "The beauty of life is in its unpredictability.", author: "Anonymous" },
-            { text: "The secret to happiness is to find beauty in the ordinary.", author: "Anonymous" },
-            { text: "Life is about progress, not perfection.", author: "Anonymous" },
-            { text: "Don't just wish for success—work for it.", author: "Anonymous" },
-            { text: "Success comes from the willingness to keep going despite the setbacks.", author: "Anonymous" },
-            { text: "True strength lies in showing up even when it's hard.", author: "Anonymous" },
-            { text: "Happiness is a choice, not a circumstance.", author: "Anonymous" },
-            { text: "Change is the only constant; embrace it.", author: "Anonymous" },
-            { text: "Success is measured by the lives you touch, not by the wealth you accumulate.", author: "Anonymous" },
-            { text: "Your future is shaped by the decisions you make today.", author: "Anonymous" },
-            { text: "The key to success is believing you're capable of achieving it.", author: "Anonymous" },
-            { text: "You are the only person who can limit your potential.", author: "Anonymous" },
-            { text: "Success is born from passion, driven by determination.", author: "Anonymous" },
-            { text: "Life is a journey meant to be experienced, not just endured.", author: "Anonymous" },
-            { text: "Success is not about being the best; it's about being your best.", author: "Anonymous" },
-            { text: "Be the change you wish to see in the world.", author: "Anonymous" },
-            { text: "Success comes when you refuse to give up.", author: "Anonymous" },
-            { text: "Each day brings a new opportunity to grow and evolve.", author: "Anonymous" },
-            { text: "Happiness is a journey, not a destination.", author: "Anonymous" },
-            { text: "Your life is your message to the world; make it count", author: "Anonymous" }
-        );
+        // Optimized quote generation with error handling
+        function generateQuote() {
+            try {
+                // Initialize cache only if needed
+                if (quoteCache.length === 0) {
+                    quoteCache = [...quotes];
+                    currentQuoteIndex = -1;
+                }
 
-        // Create particles animation
-        function createParticles() {
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.width = Math.random() * 4 + 'px';
-                particle.style.height = particle.style.width;
-                particles.appendChild(particle);
-                animateParticle(particle);
+                // Get next quote
+                currentQuoteIndex = (currentQuoteIndex + 1) % quoteCache.length;
+                let quote = quoteCache[currentQuoteIndex];
+
+                // Update the display with smooth transition
+                const targetQuote = isFlipped ? quoteElement : quoteBackElement;
+                const targetAuthor = isFlipped ? authorElement : authorBackElement;
+
+                // Prevent duplicate consecutive quotes
+                if (targetQuote.textContent === quote.text) {
+                    currentQuoteIndex = (currentQuoteIndex + 1) % quoteCache.length;
+                    quote = quoteCache[currentQuoteIndex];
+                }
+
+                // Update content without animation first
+                targetQuote.textContent = quote.text;
+                targetAuthor.textContent = `- ${quote.author}`;
+
+                // Use requestAnimationFrame for smooth animation
+                requestAnimationFrame(() => {
+                    quoteContainer.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    quoteContainer.classList.toggle('flip');
+                    isFlipped = !isFlipped;
+                });
+
+                // Reset timer with improved accuracy
+                timeLeft = 10;
+                lastUpdateTime = Date.now();
+
+                // Ensure auto-generation is running if not paused
+                if (!intervalId && !isPaused) {
+                    startAutoGeneration();
+                }
+            } catch (error) {
+                console.error('Error generating quote:', error);
+                // Simple recovery without shuffling
+                quoteCache = [...quotes];
+                currentQuoteIndex = -1;
             }
         }
 
-        function animateParticle(particle) {
-            particle.style.left = Math.random() * 100 + 'vw';
-            particle.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
+        // Improved timer update function using requestAnimationFrame
+        function updateTimer() {
+            if (isPaused) return;
             
-            particle.addEventListener('animationend', () => {
-                particle.style.left = Math.random() * 100 + 'vw';
-                void particle.offsetWidth;
-                particle.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
-            });
+            const currentTime = Date.now();
+            const timeDiff = (currentTime - lastUpdateTime) / 1000;
+            
+            timeLeft = Math.max(0, Math.ceil(10 - timeDiff));
+            const timerText = `Next quote in ${timeLeft}s`;
+            timerElement.textContent = timerText;
+            timerBackElement.textContent = timerText;
+            
+            if (timeLeft <= 0) {
+                generateQuote();
+            }
+
+            // Request next frame for smooth updates
+            if (!isPaused) {
+                intervalId = requestAnimationFrame(updateTimer);
+            }
         }
 
-        // Event Listeners
+        function startAutoGeneration() {
+            stopAutoGeneration(); // Clear any existing interval
+            lastUpdateTime = Date.now();
+            intervalId = requestAnimationFrame(updateTimer);
+        }
+
+        function stopAutoGeneration() {
+            if (intervalId) {
+                cancelAnimationFrame(intervalId);
+                intervalId = null;
+            }
+        }
+
+        // Event Listeners with improved handling
         enterBtn.addEventListener('click', () => {
             intro.classList.add('hidden');
             main.classList.add('active');
             createParticles();
-            // Don't start auto-generation until first quote is generated
+            shuffleQuotes(); // Initialize quote cache
             timeLeft = 10;
             timerElement.textContent = `Next quote in ${timeLeft}s`;
             timerBackElement.textContent = `Next quote in ${timeLeft}s`;
         });
 
-        // Simplified quote generation
-        function generateQuote() {
-            let availableQuotes = quotes.filter(quote => {
-                const quoteKey = `${quote.text}-${quote.author}`;
-                return !usedQuotes.has(quoteKey);
-            });
+        // Improved touch handling for mobile
+        let touchStartTime = 0;
+        let isTouchActive = false;
 
-            if (availableQuotes.length === 0) {
-                usedQuotes.clear();
-                availableQuotes = quotes;
+        generateBtn.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+            isTouchActive = true;
+        }, { passive: true });
+
+        generateBtn.addEventListener('touchend', (e) => {
+            if (isTouchActive && Date.now() - touchStartTime < 300) {
+                generateQuote();
             }
+            isTouchActive = false;
+        }, { passive: true });
 
-            const quote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
-            const quoteKey = `${quote.text}-${quote.author}`;
-            usedQuotes.add(quoteKey);
+        generateBtn.addEventListener('touchcancel', () => {
+            isTouchActive = false;
+        }, { passive: true });
 
-            // Update the display immediately
-            const targetQuote = isFlipped ? quoteElement : quoteBackElement;
-            const targetAuthor = isFlipped ? authorElement : authorBackElement;
-            
-            targetQuote.textContent = quote.text;
-            targetAuthor.textContent = `- ${quote.author}`;
-
-            // Flip the container
-            quoteContainer.classList.toggle('flip');
-            isFlipped = !isFlipped;
-
-            // Start auto-generation if it's not already running
-            if (!intervalId && !isPaused) {
-                startAutoGeneration();
-            }
-
-            // Reset timer
-            timeLeft = 10;
-            lastUpdateTime = Date.now();
-        }
-
-        generateBtn.addEventListener('click', generateQuote);
+        generateBtn.addEventListener('click', (e) => {
+            if (e.pointerType === 'touch') return;
+            generateQuote();
+        });
 
         pauseBtn.addEventListener('click', () => {
             isPaused = !isPaused;
@@ -894,56 +453,77 @@
             }
         });
 
-        function updateTimer() {
-            if (isPaused) return;
-            
-            const currentTime = Date.now();
-            const timeDiff = currentTime - lastUpdateTime;
-            
-            if (timeDiff >= 1000) {
-                timeLeft--;
-                lastUpdateTime = currentTime;
-                const timerText = `Next quote in ${timeLeft}s`;
-                timerElement.textContent = timerText;
-                timerBackElement.textContent = timerText;
-                
-                if (timeLeft <= 0) {
-                    generateQuote();
-                }
-            }
-        }
-
-        function startAutoGeneration() {
-            if (intervalId) clearInterval(intervalId);
-            intervalId = setInterval(updateTimer, 100);
-        }
-
-        function stopAutoGeneration() {
-            if (intervalId) {
-                clearInterval(intervalId);
-                intervalId = null;
-            }
-        }
-
-        // Handle visibility change for better mobile experience
+        // Improved visibility handling
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 stopAutoGeneration();
+                document.body.style.animationPlayState = 'paused';
             } else if (!isPaused) {
-                lastUpdateTime = Date.now(); // Reset the timer when coming back
+                lastUpdateTime = Date.now();
                 startAutoGeneration();
+                document.body.style.animationPlayState = 'running';
             }
         });
 
-        // Add touch event handling for mobile devices
-        generateBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent double-firing on mobile
+        // Optimized particle creation using DocumentFragment
+        function createParticles() {
+            const fragment = document.createDocumentFragment();
+            const particleCount = window.innerWidth < 768 ? 25 : 50; // Reduce particles on mobile
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.width = Math.random() * 3 + 'px'; // Smaller particles on mobile
+                particle.style.height = particle.style.width;
+                fragment.appendChild(particle);
+                animateParticle(particle);
+            }
+            particles.appendChild(fragment);
+        }
+
+        function animateParticle(particle) {
+            particle.style.left = Math.random() * 100 + 'vw';
+            const duration = Math.random() * 5 + 3; // Shorter animation on mobile
+            particle.style.animation = `float ${duration}s linear infinite`;
+            
+            particle.addEventListener('animationend', () => {
+                particle.style.left = Math.random() * 100 + 'vw';
+                void particle.offsetWidth;
+                particle.style.animation = `float ${duration}s linear infinite`;
+            });
+        }
+
+        // Handle orientation changes
+        window.addEventListener('orientationchange', () => {
+            const particles = document.querySelectorAll('.particle');
+            particles.forEach(particle => {
+                particle.style.left = Math.random() * 100 + 'vw';
+                void particle.offsetWidth;
+                particle.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
+            });
         });
 
-        // Ensure proper cleanup when page is unloaded
-        window.addEventListener('unload', () => {
-            stopAutoGeneration();
+        // Optimize for mobile devices
+        function optimizeForMobile() {
+            if (window.innerWidth < 768) {
+                // Reduce animation complexity on mobile
+                document.querySelector('.quote-face').style.transform = 'translateZ(10px)';
+                document.querySelector('.quote-face.back').style.transform = 'translateZ(10px) rotateX(180deg)';
+                
+                // Optimize text size for mobile
+                document.querySelector('.quote').style.fontSize = 'clamp(1rem, 4vw, 1.5rem)';
+                document.querySelector('.author').style.fontSize = 'clamp(0.8rem, 3vw, 1rem)';
+            }
+        }
+
+        // Call optimization on load and resize
+        window.addEventListener('load', () => {
+            optimizeForMobile();
+            quoteCache = [...quotes];
+            currentQuoteIndex = -1;
         });
+
+        window.addEventListener('resize', optimizeForMobile);
     </script>
 </body>
 </html>
